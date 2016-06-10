@@ -47,4 +47,8 @@ public class SerialPortManager : MonoBehaviour {
             queuedActions = "";
         }
     }
+
+    public void AddToArduinoQueue(string action) {
+        queuedActions = queuedActions + action + " ";
+    }
 }
