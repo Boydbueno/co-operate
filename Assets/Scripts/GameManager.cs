@@ -41,6 +41,9 @@ public class GameManager : MonoBehaviour {
                     serialPortManager.AddToArduinoQueue("ENG:1");
                 } else {
                     isKeySwitchActive = false;
+                }
+
+                if (value == 0 && !hasGameStarted) {
                     serialPortManager.AddToArduinoQueue("ENG:0");
                 }
                 break;
