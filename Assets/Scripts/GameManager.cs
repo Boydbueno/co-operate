@@ -10,6 +10,13 @@ public class GameManager : MonoBehaviour {
     private bool hasGameStarted = false;
     private bool isKeySwitchActive = false;
 
+    public void Update() {
+
+        if (Input.GetKeyDown("space")) {
+            player.Rotate(1f);
+        }
+    }
+
     public void Execute(string commandString) {
         string[] commandParts = commandString.Split(':');
         string command = commandParts[0];
