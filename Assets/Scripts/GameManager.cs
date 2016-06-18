@@ -3,17 +3,17 @@ using System.Collections;
 
 public class GameManager : MonoBehaviour {
 
-    public SerialPortManager serialPortManager;
-
     public Player player;
 
-    private bool hasGameStarted = false;
-    private bool isKeySwitchActive = false;
+    private SerialPortManager serialPortManager;
 
-    public void Update() {
+    void Start() {
+        serialPortManager = SerialPortManager.Instance;
+    }
 
+    void Update() {
         if (Input.GetKeyDown("space")) {
-            player.Rotate(1f);
+            player.SetBoostState(1);
         }
     }
 
@@ -26,45 +26,23 @@ public class GameManager : MonoBehaviour {
 
         switch(command) {
             case "SLIDER":
-                if (!hasGameStarted) return;
-                player.SetVelocity(value);
+                player.SetThrust(value);
+                break;
+            case "BOOST_SWITCH":
+                player.SetBoostState(value);
                 break;
             case "ROTARY":
-                if (!hasGameStarted) return;
                 player.Rotate(value);
                 break;
             case "TEST_SWITCH":
-                if (!hasGameStarted) return;
                 player.SetShieldsState(value);
-                if (value == 0) {
-                    serialPortManager.AddToArduinoQueue("SHLD:0");
-                } else {
-                    serialPortManager.AddToArduinoQueue("SHLD:1");
-                }
                 break;
             case "KEY_SWITCH":
-                if (value == 1) {
-                    isKeySwitchActive = true;
-                    serialPortManager.AddToArduinoQueue("ENG:1");
-                } else {
-                    isKeySwitchActive = false;
-                }
-
-                if (value == 0 && !hasGameStarted) {
-                    serialPortManager.AddToArduinoQueue("ENG:0");
-                }
+                player.SetKeySwitchState(value);
                 break;
             case "START_BTN":
-                if (!hasGameStarted && isKeySwitchActive && value == 1) {
-                    // Start
-                    StartGame();
-                }
+                player.SetEngineState(value);
                 break;
         }
-    }
-
-    public void StartGame() {
-        // Turn some LEDS on
-        hasGameStarted = true;
     }
 }
