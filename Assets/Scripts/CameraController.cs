@@ -3,7 +3,7 @@ using System.Collections;
 
 public class CameraController : MonoBehaviour {
 
-    public Player player;
+    public Ship player;
     	
 	// Update is called once per frame
 	void Update () {

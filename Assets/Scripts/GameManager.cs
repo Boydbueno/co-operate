@@ -3,7 +3,7 @@ using System.Collections;
 
 public class GameManager : MonoBehaviour {
 
-    public Player player;
+    public Ship player;
 
     private SerialPortManager serialPortManager;
 
@@ -14,6 +14,10 @@ public class GameManager : MonoBehaviour {
     void Update() {
         if (Input.GetKeyDown("space")) {
             player.SetBoostState(1);
+        } 
+
+        if (Input.GetKeyDown("backspace")) {
+            player.SetBoostState(0);
         }
     }
 

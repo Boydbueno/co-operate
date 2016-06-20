@@ -2,17 +2,25 @@
 using System.Collections;
 using System;
 
-public class Player : MonoBehaviour {
+public class Ship : MonoBehaviour {
 
     public GameObject Shield;
 
     private bool isKeySwitchActive = false;
     private bool isReactorActive = false;
 
-    private float maxThrust = 3;
-    private float boostThrust = 9;
-    private float currentThrust = 0;
-    private float targetThrust = 0;
+    private float maxThrust = 4;
+    private float secondsTillMaxThrust = 8;
+    public float thrustCurveTime = 0;
+
+    private float boostThrust = 15;
+    private float secondsTillBoostThrust = 5;
+    private float boostThrustCurveTime = 0;
+
+    public double currentThrust = 0;
+    private double targetThrust = 0;
+
+
     private bool isBoostActive = false;
 
     private float maxRotationSpeed = 40;
@@ -21,27 +29,21 @@ public class Player : MonoBehaviour {
 
     private SerialPortManager serialPortManager;
 
+
     void Start () {
         serialPortManager = SerialPortManager.Instance;
 
         serialPortManager.onApplicationStop += DeactivateAllSystems;
     }
-	
+
 	void FixedUpdate () {
         if (transform.localEulerAngles.z != targetRotation && isReactorActive) {
             HandleRotation();
         }
 
-        if (currentThrust != targetThrust) {
-            // Todo: Build this up
-            currentThrust = targetThrust;
-        }
+        currentThrust = GetCurrentThrust();
 
-        if (isBoostActive && isReactorActive) {
-            transform.position += transform.up * boostThrust * Time.deltaTime;
-        } else if (currentThrust != 0 && isReactorActive) {
-            transform.position += transform.up * currentThrust * Time.deltaTime;
-        }
+        transform.position += transform.up * (float)currentThrust * Time.deltaTime;
     }
 
     public void SetThrust(float value) {
@@ -93,6 +95,9 @@ public class Player : MonoBehaviour {
 
     private void ActivateBoost() {
         isBoostActive = true;
+
+        //T = d * (a / c)1 / 3
+        boostThrustCurveTime = secondsTillBoostThrust * (float)Math.Pow(currentThrust / boostThrust, 1.0 / 3.0);
     }
 
     private void DeactivateBoost() {
@@ -115,6 +120,25 @@ public class Player : MonoBehaviour {
                 transform.localEulerAngles = new Vector3(0, 0, transform.localEulerAngles.z - (maxRotationSpeed * Time.deltaTime));
             }
         }
+    }
+
+    private double GetCurrentThrust() {
+        if (isBoostActive) {
+            if (boostThrust > currentThrust) {
+                boostThrustCurveTime += Time.deltaTime;
+            }
+
+            return Easing.CubicEaseIn(boostThrustCurveTime, 0, boostThrust, secondsTillBoostThrust);
+        }
+
+
+        if (targetThrust > currentThrust) {
+            thrustCurveTime += Time.deltaTime;
+        } else if (targetThrust < currentThrust) {
+            thrustCurveTime -= Time.deltaTime;
+        }
+
+        return Easing.CubicEaseIn(thrustCurveTime, 0, maxThrust, secondsTillMaxThrust);
     }
 
     private void DeactivateAllSystems() {
