@@ -7,19 +7,11 @@ public class Ship : MonoBehaviour {
     public GameObject Shield;
 
     private bool isKeySwitchActive = false;
-    private bool isReactorActive = false;
+    public bool isReactorActive = false;
 
     private float maxThrust = 4;
-    private float secondsTillMaxThrust = 8;
-    public float thrustCurveTime = 0;
 
     private float boostThrust = 15;
-    private float secondsTillBoostThrust = 5;
-    private float boostThrustCurveTime = 0;
-
-    public double currentThrust = 0;
-    private double targetThrust = 0;
-
 
     private bool isBoostActive = false;
 
@@ -27,11 +19,15 @@ public class Ship : MonoBehaviour {
 
     private float targetRotation;
 
+    public float thrust = 0;
+
     private SerialPortManager serialPortManager;
+    private Rigidbody2D rigidbody;
 
 
     void Start () {
         serialPortManager = SerialPortManager.Instance;
+        rigidbody = GetComponent<Rigidbody2D>();
 
         serialPortManager.onApplicationStop += DeactivateAllSystems;
     }
@@ -41,13 +37,33 @@ public class Ship : MonoBehaviour {
             HandleRotation();
         }
 
-        currentThrust = GetCurrentThrust();
-
-        transform.position += transform.up * (float)currentThrust * Time.deltaTime;
+        if (isReactorActive) {
+            if (isBoostActive) {
+                rigidbody.AddRelativeForce(new Vector2(0, boostThrust));
+            } else {
+                rigidbody.AddRelativeForce(new Vector2(0, thrust));
+            }
+        }
     }
 
     public void SetThrust(float value) {
-        targetThrust = value * maxThrust;
+        thrust = value * maxThrust;
+    }
+
+    public void ModifyThrust(float value) {
+        if ((value > 0 && thrust == maxThrust) || (value < 0 && thrust == 0)) return;
+
+        thrust += value;
+
+        if (thrust > maxThrust) {
+            thrust = maxThrust;
+        } else if (thrust < 0) {
+            thrust = 0;
+        }
+    }
+
+    public void ModifyRotation(float value) {
+        targetRotation += value;
     }
 
     public void Rotate(float rotate) {
@@ -95,9 +111,6 @@ public class Ship : MonoBehaviour {
 
     private void ActivateBoost() {
         isBoostActive = true;
-
-        //T = d * (a / c)1 / 3
-        boostThrustCurveTime = secondsTillBoostThrust * (float)Math.Pow(currentThrust / boostThrust, 1.0 / 3.0);
     }
 
     private void DeactivateBoost() {
@@ -120,25 +133,6 @@ public class Ship : MonoBehaviour {
                 transform.localEulerAngles = new Vector3(0, 0, transform.localEulerAngles.z - (maxRotationSpeed * Time.deltaTime));
             }
         }
-    }
-
-    private double GetCurrentThrust() {
-        if (isBoostActive) {
-            if (boostThrust > currentThrust) {
-                boostThrustCurveTime += Time.deltaTime;
-            }
-
-            return Easing.CubicEaseIn(boostThrustCurveTime, 0, boostThrust, secondsTillBoostThrust);
-        }
-
-
-        if (targetThrust > currentThrust) {
-            thrustCurveTime += Time.deltaTime;
-        } else if (targetThrust < currentThrust) {
-            thrustCurveTime -= Time.deltaTime;
-        }
-
-        return Easing.CubicEaseIn(thrustCurveTime, 0, maxThrust, secondsTillMaxThrust);
     }
 
     private void DeactivateAllSystems() {

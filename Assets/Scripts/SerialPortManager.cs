@@ -14,6 +14,7 @@ public class SerialPortManager : MonoBehaviour {
 
     public delegate void OnApplicationStop();
     public OnApplicationStop onApplicationStop;
+    public bool HasConnectedDevice { get; private set; }
 
     void Awake() {
         // First we check if there are any other instances conflicting
@@ -27,17 +28,25 @@ public class SerialPortManager : MonoBehaviour {
     }
 
 	void Start() {
-        stream = new SerialPort("COM3", 9600);
-        stream.ReadTimeout = 100;
-        stream.Open();
+        try {
+            stream = new SerialPort("COM3", 9600);
+            stream.ReadTimeout = 100;
+            stream.Open();
+            stream.WriteLine("STRT");
+            stream.BaseStream.Flush();
+        } catch(System.IO.IOException) {
+            Debug.Log("Control panel cannot be found");
+            return;
+        } 
 
-        stream.WriteLine("STRT");
-        stream.BaseStream.Flush();
+        HasConnectedDevice = true;
 
         InvokeRepeating("ReadFromArduino", 1, 1);
     }
 	
     void OnApplicationQuit() {
+        if (!HasConnectedDevice) return;
+
         onApplicationStop();
         AddToSerialQueue("STOP");
         ReadFromArduino();

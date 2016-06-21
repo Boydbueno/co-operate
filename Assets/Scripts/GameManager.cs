@@ -12,12 +12,19 @@ public class GameManager : MonoBehaviour {
     }
 
     void Update() {
-        if (Input.GetKeyDown("space")) {
-            player.SetBoostState(1);
-        } 
+        if (Input.GetButtonDown("start")) {
+            player.SetKeySwitchState(1);
+            player.SetEngineState(1);
+        }
 
-        if (Input.GetKeyDown("backspace")) {
-            player.SetBoostState(0);
+        if (Input.GetAxisRaw("vertical") != 0 || Input.GetAxis("verticalAxis") != 0 || Input.GetAxis("verticalLeftAnalog") != 0) {
+            float value = (Input.GetAxisRaw("vertical") + Input.GetAxis("verticalAxis") + Input.GetAxis("verticalLeftAnalog")) * Time.deltaTime * 2;
+            player.ModifyThrust(value);
+        }
+
+        if (Input.GetAxisRaw("horizontal") != 0 || Input.GetAxis("horizontalAxis") != 0 || Input.GetAxis("horizontalLeftAnalog") != 0) {
+            float value = (Input.GetAxisRaw("horizontal") + Input.GetAxis("horizontalAxis") + Input.GetAxis("horizontalLeftAnalog")) * Time.deltaTime * 50;
+            player.ModifyRotation(value);
         }
     }
 
@@ -25,8 +32,6 @@ public class GameManager : MonoBehaviour {
         string[] commandParts = commandString.Split(':');
         string command = commandParts[0];
         float value = float.Parse(commandParts[1]);
-
-        Debug.Log(value);
 
         switch(command) {
             case "SLIDER":
